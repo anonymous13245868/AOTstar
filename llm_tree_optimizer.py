@@ -77,7 +77,7 @@ class LLMGuidedTreeOptimizer(BaseOptimizer):
     def _expand_root(self, route_list, all_fps):
         """Expand root node with retry mechanism"""
         retry_count = 0
-        while retry_count < 8:
+        while retry_count < 3:
             try:
                 retry_count += 1
                 if retry_count > 1:
@@ -160,9 +160,9 @@ class LLMGuidedTreeOptimizer(BaseOptimizer):
                 self._backpropagate_and_node(new_and_node, score)
             
             # Check termination condition
-            if len(self.oracle) > config.get("max_oracle_calls", 1000):
-                print("Reached maximum oracle calls")
-                break
+            # if len(self.oracle) > config.get("max_oracle_calls", 100):
+            #     print("Reached maximum oracle calls")
+            #     break
         
         if self.root_or_node.is_solved:
             return self._extract_solution()
@@ -209,33 +209,26 @@ class LLMGuidedTreeOptimizer(BaseOptimizer):
         target_reactant = self._select_expansion_target(unsolved_reactants)
         print(f"   Expanding reactant: {target_reactant.smiles}")
         
-        # Retry mechanism
+        # Root expansion
         new_and_nodes = []
-        max_retries = 5
-        
-        for retry in range(max_retries):
-            try:
-                if retry > 0:
-                    print(f"   🔄 Retrying expansion ({retry + 1}/{max_retries})...")
+
+        try:
+            # Generate routes with LLM
+            generated_routes = self._generate_routes_with_llm(target_reactant, route_list, all_fps)
+            
+            if generated_routes:
+                # Map routes to tree structure
+                new_and_nodes = self._map_routes_to_tree(
+                    target_reactant, generated_routes, selected_and_node.depth + 1
+                )
                 
-                # Generate routes with LLM
-                generated_routes = self._generate_routes_with_llm(target_reactant, route_list, all_fps)
-                
-                if generated_routes:
-                    # Map routes to tree structure
-                    new_and_nodes = self._map_routes_to_tree(
-                        target_reactant, generated_routes, selected_and_node.depth + 1
-                    )
-                    
-                    if new_and_nodes:
-                        print(f"   ✅ Expansion succeeded on attempt {retry + 1}")
-                        break
-            except Exception as e:
-                print(f"   Expansion error (attempt {retry + 1}): {e}")
-                continue
+                if new_and_nodes:
+                    print(f"   ✅ Expansion succeeded")
+        except Exception as e:
+            print(f"   Expansion error: {e}")
 
         if not new_and_nodes:
-            print(f"   ❌ Expansion failed after {max_retries} attempts, marking node as exhausted")
+            print(f"   ❌ Expansion failed, marking node as exhausted")
             selected_and_node.is_leaf = False
             self.leaf_and_nodes.discard(selected_and_node)
 
