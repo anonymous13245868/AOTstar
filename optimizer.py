@@ -714,7 +714,7 @@ class BaseOptimizer:
         
         message = [{
             "role": "system", 
-            "content": "You are a retrosynthesis agent who can make multi-step retrosynthesis plans based on your molecule knowledge."
+            "content": "You are a professional chemist specializing in synthesis analysis."
         }]
         
         message.append({"role": "user", "content": question})
