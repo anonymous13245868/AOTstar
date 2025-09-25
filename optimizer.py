@@ -712,6 +712,7 @@ class BaseOptimizer:
             base_url="your_api_url"
         )
         
+            # "content": "You are a retrosynthesis agent who can make multi-step retrosynthesis plans based on your molecule knowledge."
         message = [{
             "role": "system", 
             "content": "You are a professional chemist specializing in synthesis analysis."
