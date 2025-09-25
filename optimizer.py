@@ -725,7 +725,7 @@ class BaseOptimizer:
                 response = client.chat.completions.create(
                     model=model,
                     messages=message,
-                    max_tokens=8192,
+                    max_tokens=4096,
                     temperature=temperature,
                     stream=False
                 )
