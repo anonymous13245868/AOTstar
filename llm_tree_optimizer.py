@@ -502,13 +502,15 @@ class LLMGuidedTreeOptimizer(BaseOptimizer):
             print(f'unscaled oracle score: {oracle_score}')
             
             # Convert oracle score to positive score
-            chemistry_score = max(0.0, 1.0 + oracle_score/14)
+            # chemistry_score = max(0.0, 1.0 + oracle_score/14)
+            chemistry_score = max(0.0, oracle_score/5) #normalize oracle_score
             depth_penalty_factor = 0.99 ** and_node.depth
             
             # Combine availability and chemistry scores
             # Weight: 40% chemistry + 60% availability
             base_score = 0.4 * chemistry_score + 0.6 * availability_score
-            final_score = base_score * depth_penalty_factor
+            # final_score = base_score * depth_penalty_factor
+            final_score = base_score
             and_node.feasibility_score = final_score
             
             print(f"Evaluation - Availability: {availability_score:.3f} ({solved_reactants}/{total_reactants}), "
